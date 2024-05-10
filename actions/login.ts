@@ -27,6 +27,10 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
     if (error instanceof AuthError) {
       switch (error.type) {
         case "AccessDenied":
+          return {
+            error: "Something went wrong!",
+          };
+
         case "AdapterError":
         case "CallbackRouteError":
         case "ErrorPageLoop":
