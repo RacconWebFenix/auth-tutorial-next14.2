@@ -7,8 +7,29 @@ import { getUserById } from "@/data/user";
 import { UserRole } from "@prisma/client";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
+  pages: {
+    signIn: "/auth/login",
+    error: "/auth/error/",
+  },
+  events: {
+    async linkAccount({ user }) {
+      await db.user.update({
+        where: { id: user.id },
+        data: {
+          emailVerified: new Date(),
+        },
+      });
+    },
+  },
   callbacks: {
-    async signIn({ user }) {
+    async signIn({ user, account, profile }) {
+      if (!!account?.provider) {
+        // Aqui você pode adicionar verificações adicionais para o usuário Google e outros providers
+        console.log("Usuário OAuth logado:", profile);
+
+        return true;
+      }
+
       const existingUser = await getUserById(user.id);
 
       if (!existingUser || !existingUser.emailVerified) {
