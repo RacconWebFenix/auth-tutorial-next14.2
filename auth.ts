@@ -5,6 +5,7 @@ import authConfig from "@/auth.config";
 import { db } from "@/lib/db";
 import { getUserById } from "@/data/user";
 import { UserRole } from "@prisma/client";
+import { getTwoFactorConfirmationByUserId } from "./data/two-factor-confirmation";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   pages: {
@@ -23,7 +24,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async signIn({ user, account }) {
-
       //  Allow OAuth without email verification
       if (account?.provider !== "credentials") return true;
 
@@ -32,7 +32,18 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       // Prevent sigin in without email verification
       if (!existingUser?.emailVerified) return false;
 
-      // TODO: Add 2FA check
+      if (existingUser.isTowFactorEnabled) {
+        const twoFactorConfirmation = await getTwoFactorConfirmationByUserId(
+          existingUser.id
+        );
+
+        if (!twoFactorConfirmation) return false;
+
+        // Delete two factos confirmation for next sign in
+        await db.twoFactorConfirmation.delete({
+          where: { id: twoFactorConfirmation.id },
+        });
+      }
 
       return true;
     },
