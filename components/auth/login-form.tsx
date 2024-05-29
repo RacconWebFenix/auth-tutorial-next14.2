@@ -53,7 +53,7 @@ export const LoginForm = () => {
             setError(data.error);
           }
           if (data?.success) {
-            form.reset();
+            // form.reset();
             setSuccess(data.success);
           }
 
